@@ -1,0 +1,13 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "wotr"
+version = "0.0.1"
+dependencies = []
+
+[project.scripts]
+wotr = "wotr.main:main"
+
+
