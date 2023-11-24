@@ -34,7 +34,7 @@ class State:
         ]
 
     def starting_side(self) -> Side:
-        return [Side.FREE, Side.SHADOW][self.game_round % 2]
+        return [Side.FREE, Side.SHADOW][(self.game_round-1) % 2]
 
     def player_turns(self) -> Iterable[Player]:
         round_index = self.game_round - 1
@@ -55,6 +55,16 @@ class State:
         print(self.shadow_scoring_area)
         print(self.free_scoring_area)
 
+    
+    def get_total_points_for_side(self, side: Side) -> int:
+        if side == Side.FREE:
+            return self.free_scoring_area.total_victory_points() + [self.frodo_player.used_ring_token, self.aragorn_player.used_ring_token].count(False)
+
+
+
     def is_game_over(self) -> bool:
-        return self.current_path > 9 or \
-            (abs(self.shadow_scoring_area.total_victory_points() - self.free_scoring_area.total_victory_points()) >= 10)
+        if self.current_path > 9:
+            return True
+        
+        shadow_points = self.shadow_scoring_area.total_victory_points()
+            (abs() - self.free_scoring_area.total_victory_points()) >= 10)

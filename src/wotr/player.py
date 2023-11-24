@@ -15,6 +15,8 @@ class Player:
     eliminated_pile: Deck
     reserve: Reserve
     character: PlayerCharacter
+    used_ring_token: bool = False
+    passed: bool = False
 
     def __init__(self, character: PlayerCharacter):
         self.character = character
@@ -55,3 +57,17 @@ class Player:
     def winnow(self):
         # TODO
         pass
+
+    def can_pass(self) -> bool:
+        # TODO
+        return True
+
+    def view_string(self):
+        print(f"Hand: {self.hand}")
+        # TODO: print other relevant information
+
+    def pass_turn(self):
+        self.passed = True
+        
+    def unpass_turn(self):
+        self.passed = False

@@ -1,4 +1,4 @@
-from enum import StrEnum, auto
+from enum import Enum, StrEnum, auto
 
 class Side(StrEnum):
     SHADOW = auto()
@@ -31,3 +31,12 @@ class CardType(StrEnum):
 class CharacterClass(StrEnum):
     NAZGUL = auto()
     HOBBIT = auto()
+
+class ActionType(Enum):
+    PLAY_CARD = auto()
+    MOVE_FROM_RESERVE = auto()
+    CYCLE = auto()
+    WINNOW = auto()
+    CARD_ACTION = auto()
+    RING_TOKEN = auto()
+    PASS = auto()

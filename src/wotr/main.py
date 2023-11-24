@@ -1,9 +1,10 @@
+from re import M
 from wotr.battleground import BattlegroundDeck
 from wotr.path import PathDeck
 from wotr.state import State
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
-from wotr.enums import Side, PlayerCharacter
+from wotr.enums import ActionType, Side, PlayerCharacter
 
 def main():
     state = State(
@@ -38,6 +39,8 @@ def main():
     for player in state.all_players():
         print("Each player draws 7 cards and cycles two.")
         player.draw(7)
+        
+        # Choice here
         player.cycle(2)
 
     while True:
@@ -46,18 +49,65 @@ def main():
         # Location Step
         # The starting player first activates one battleground then one path
         if state.starting_side() == Side.FREE:
-            active_battleground = state.free_battleground_deck.activate_one()
+            active_battleground = state.free_battleground_deck.draw()
         else:
-            active_battleground = state.shadow_battleground_deck.activate_one()
+            active_battleground = state.shadow_battleground_deck.draw()
+
+        # May result in a choice
+        active_battleground.activate()
 
         active_path = state.path_deck.draw_path(state.current_path)
 
-        # Action Step
-        # TODO
+        # May result in a choice
+        active_path.activate()
+
+        # p10: Action Step
+
+        for player in state.player_turns():
+            print(f"{player.view_string()}")
+
+            did_action = False
+
+            while not did_action:
+                print("Choose an action type:")
+                for action_type in ActionType:
+                    print(f"({action_type.value}) {action_type.name}")
+                chosen_action_type = ActionType(int(input("> ")))
+
+                # TODO
+                match chosen_action_type:
+                    case ActionType.PLAY_CARD:
+                        pass
+                    case ActionType.MOVE_FROM_RESERVE:
+                        pass
+                    case ActionType.CYCLE:
+                        pass
+                    case ActionType.WINNOW:
+                        if player.can_winnow():
+                            player.winnow()
+                            did_action = True
+                    case ActionType.CARD_ACTION:
+                        pass
+                    case ActionType.RING_TOKEN:
+                        pass
+                    case ActionType.PASS:
+                        if player.can_pass():
+                            player.pass_turn()
+                            did_action = True
+
+                if did_action and chosen_action_type != ActionType.PASS:
+                    player.unpass_turn()
+
+            
+            if all(player.passed for player in state.all_players()):
+                # If all players have passed consecutively, the Action step ends
+                break
+
 
         # Combat Step
+        active_battleground.resolve()
+        active_path.resolve()
 
-        state.current_path += 1
         
         # Victory Check
         if state.is_game_over():
@@ -69,6 +119,8 @@ def main():
         # TODO
 
         # Starting player token is passed to next player in order
+        state.current_path += 1
+        state
 
 
 
