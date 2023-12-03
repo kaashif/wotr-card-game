@@ -1,11 +1,10 @@
 from dataclasses import dataclass
 from typing import Iterable
-from wotr.battleground import BattlegroundDeck
-from wotr.path import PathDeck
-from wotr.state import State
+from wotr.battleground import Battleground, BattlegroundDeck
+from wotr.path import Path, PathDeck
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
-from wotr.enums import Side, PlayerCharacter
+from wotr.enums import Side
 
 @dataclass
 class State:
@@ -23,7 +22,11 @@ class State:
     path_deck: PathDeck
 
     game_round: int = 1
-    current_path: int = 1
+    current_path_number: int = 1
+
+    active_battleground: Battleground | None = None
+    active_path: Path | None = None
+
 
     def all_players(self) -> list[Player]:
         return [
@@ -59,12 +62,10 @@ class State:
     def get_total_points_for_side(self, side: Side) -> int:
         if side == Side.FREE:
             return self.free_scoring_area.total_victory_points() + [self.frodo_player.used_ring_token, self.aragorn_player.used_ring_token].count(False)
-
+        else:
+            return self.shadow_scoring_area.total_victory_points() + [self.witch_king_player.used_ring_token, self.saruman_player.used_ring_token].count(False)
 
 
     def is_game_over(self) -> bool:
-        if self.current_path > 9:
-            return True
-        
-        shadow_points = self.shadow_scoring_area.total_victory_points()
-            (abs() - self.free_scoring_area.total_victory_points()) >= 10)
+        return self.current_path_number > 9:
+        # TODO: also do the difference greater than 10 one

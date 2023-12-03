@@ -1,10 +1,25 @@
-from re import M
+from wotr.action import Action, list_actions
 from wotr.battleground import BattlegroundDeck
 from wotr.path import PathDeck
 from wotr.state import State
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
-from wotr.enums import ActionType, Side, PlayerCharacter
+from wotr.enums import Side, PlayerCharacter
+
+def pick_action(actions: list[Action]) -> Action:
+    num_actions = len(actions)
+
+    print("Choose an action:")
+
+    for i in range(num_actions):
+        print(f"{i}: {actions[i]}")
+
+    while True:
+        try:
+            action_index = int(input(f"Enter an action index (0-{num_actions - 1})"))
+            return actions[action_index]
+        except Exception as e:
+            print(e)
 
 def main():
     state = State(
@@ -49,55 +64,29 @@ def main():
         # Location Step
         # The starting player first activates one battleground then one path
         if state.starting_side() == Side.FREE:
-            active_battleground = state.free_battleground_deck.draw()
+            state.active_battleground = state.free_battleground_deck.draw()
         else:
-            active_battleground = state.shadow_battleground_deck.draw()
+            state.active_battleground = state.shadow_battleground_deck.draw()
 
         # May result in a choice
-        active_battleground.activate()
+        state.active_battleground.activate()
 
-        active_path = state.path_deck.draw_path(state.current_path)
+        state.active_path = state.path_deck.draw_path(state.current_path_number)
 
         # May result in a choice
-        active_path.activate()
+        state.active_path.activate()
 
         # p10: Action Step
 
         for player in state.player_turns():
             print(f"{player.view_string()}")
 
-            did_action = False
+            possible_actions = list_actions(state, player)
+            action = pick_action(possible_actions)
 
-            while not did_action:
-                print("Choose an action type:")
-                for action_type in ActionType:
-                    print(f"({action_type.value}) {action_type.name}")
-                chosen_action_type = ActionType(int(input("> ")))
+            print(f"chosen action: {action}")
 
-                # TODO
-                match chosen_action_type:
-                    case ActionType.PLAY_CARD:
-                        pass
-                    case ActionType.MOVE_FROM_RESERVE:
-                        pass
-                    case ActionType.CYCLE:
-                        pass
-                    case ActionType.WINNOW:
-                        if player.can_winnow():
-                            player.winnow()
-                            did_action = True
-                    case ActionType.CARD_ACTION:
-                        pass
-                    case ActionType.RING_TOKEN:
-                        pass
-                    case ActionType.PASS:
-                        if player.can_pass():
-                            player.pass_turn()
-                            did_action = True
-
-                if did_action and chosen_action_type != ActionType.PASS:
-                    player.unpass_turn()
-
+            action.execute()
             
             if all(player.passed for player in state.all_players()):
                 # If all players have passed consecutively, the Action step ends
@@ -105,8 +94,8 @@ def main():
 
 
         # Combat Step
-        active_battleground.resolve()
-        active_path.resolve()
+        state.active_battleground.resolve()
+        state.active_path.resolve()
 
         
         # Victory Check
@@ -119,8 +108,8 @@ def main():
         # TODO
 
         # Starting player token is passed to next player in order
-        state.current_path += 1
-        state
+        state.current_path_number += 1
+        state.game_round += 1
 
 
 

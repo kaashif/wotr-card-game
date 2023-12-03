@@ -71,3 +71,10 @@ class Player:
         
     def unpass_turn(self):
         self.passed = False
+
+    def use_ring_token(self):
+        if self.used_ring_token:
+            raise Exception("ring token already used!")
+        
+        self.used_ring_token = False
+        self.draw(2)

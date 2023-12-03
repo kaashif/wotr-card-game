@@ -57,6 +57,9 @@ class FactionCard:
     def battleground_defense(self) -> int:
         return self.base_battleground_defense
 
+    def card_draw_bonus(self) -> int:
+        return 0
+
 def choose_faction_card(cards: list[FactionCard]) -> FactionCard:
     for i in range(0, len(cards)):
         card = cards[i]
