@@ -49,5 +49,6 @@ Once I have my heuristic "AI" implemented, maybe I'll take it further.
 
 ## What the actual tedious part is
 
-The tedious part is implementing all of the 120 cards, which all have weird
-effects.
+The tedious part is implementing all of the 120 cards. A lot of them have weird,
+non-trivial effects, conditional effects, and even for the ones that don't, I
+still have to grind through typing in all of the info about the cards.
