@@ -50,6 +50,7 @@ def main():
         shadow_battleground_deck = BattlegroundDeck(Side.SHADOW),
         free_battleground_deck = BattlegroundDeck(Side.FREE),
         path_deck = PathDeck(),
+        active_battlegrounds=[],
     )
 
     # 1. Select a scenario
@@ -82,12 +83,12 @@ def main():
         # Location Step
         # The starting player first activates one battleground then one path
         if state.starting_side() == Side.FREE:
-            state.active_battleground = state.free_battleground_deck.draw()
+            state.active_battlegrounds.append(state.free_battleground_deck.draw())
         else:
-            state.active_battleground = state.shadow_battleground_deck.draw()
+            state.active_battlegrounds.append(state.shadow_battleground_deck.draw())
 
         # May result in a choice
-        state.active_battleground.activate()
+        state.active_battlegrounds[0].activate()
 
         state.active_path = state.path_deck.draw_path(state.current_path_number)
 
@@ -117,7 +118,7 @@ def main():
                             continue
 
                         print("choose a place to play it:")
-                        place_to_play = pick_from_list(state.get_playable_locations(card))
+                        place_to_play = pick_from_list(list(state.get_playable_locations(card)))
 
                         if place_to_play is None:
                             continue
@@ -140,7 +141,7 @@ def main():
                             continue
 
                         print("choose a place to move it:")
-                        place_to_move = pick_from_list(state.get_playable_locations(card))
+                        place_to_move = pick_from_list(list(state.get_playable_locations(card)))
 
                         if place_to_move is None:
                             continue
@@ -209,7 +210,10 @@ def main():
 
         # Combat Step
         print("resolving combat")
-        state.active_battleground.resolve()
+        
+        for bg in state.active_battlegrounds:
+            bg.resolve()
+        
         state.active_path.resolve()
 
         

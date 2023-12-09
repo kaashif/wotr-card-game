@@ -78,3 +78,29 @@ class Player:
         
         self.used_ring_token = False
         self.draw(2)
+
+    
+    def can_cycle(self):
+        return len(self.hand) > 0
+
+    
+    def forsake_from_draw_deck(self):
+        # TODO
+        pass
+
+    def forsake_specific(self, card: FactionCard) -> None:
+        # TODO
+        pass
+
+    def eliminate_specific(self, card: FactionCard) -> None:
+        # TODO
+        pass
+
+    def cycle_specific(self, card: FactionCard) -> None:
+        # TODO
+        pass
+
+
+    def draw_phase(self) -> None:
+        # TODO
+        pass

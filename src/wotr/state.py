@@ -1,10 +1,23 @@
+import itertools
+
 from dataclasses import dataclass
-from typing import Iterable
+from typing import Iterable, Sequence
 from wotr.battleground import Battleground, BattlegroundDeck
+from wotr.faction_card import FactionCard
 from wotr.path import Path, PathDeck
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
-from wotr.enums import Side
+from wotr.enums import CardType, Faction, Side
+
+class Reserve:
+    pass
+
+class AsEvent:
+    pass
+
+# You can play a card to reserve, path combat, battleground combat,
+# onto another card as an item, or it's an event and resolves, then is eliminated.
+PlayLocation = Reserve | Path | Battleground | FactionCard | AsEvent
 
 @dataclass
 class State:
@@ -20,11 +33,12 @@ class State:
     free_battleground_deck: BattlegroundDeck
 
     path_deck: PathDeck
+    
+    active_battlegrounds: list[Battleground]
 
     game_round: int = 1
     current_path_number: int = 1
 
-    active_battleground: Battleground | None = None
     active_path: Path | None = None
 
 
@@ -67,5 +81,60 @@ class State:
 
 
     def is_game_over(self) -> bool:
-        return self.current_path_number > 9:
+        return self.current_path_number > 9
         # TODO: also do the difference greater than 10 one
+    
+    def get_playable_locations(self, card: FactionCard) -> Sequence[PlayLocation]:
+        match card.card_type:
+            case CardType.ARMY:
+                # Armies can be played to reserve or battlegrounds
+                return [Reserve()] + [
+                    battleground for battleground in self.active_battlegrounds
+                    if card.is_playable_to_battleground(battleground)
+                ]
+            case CardType.CHARACTER:
+                # Characters can be played to reserve, path, battleground
+                return [Reserve()] + [
+                    path for path in ([self.active_path] if self.active_path is not None else [])
+                    if card.is_playable_to_path(path)
+                ] + [
+                    battleground for battleground in self.active_battlegrounds
+                    if card.is_playable_to_battleground(battleground)
+                ]
+            case CardType.EVENT:
+                # Events aren't really played "to" anywhere
+                return [AsEvent()]
+
+            case CardType.ITEM:
+                # Items can only be played to their wielders
+                # Wielders could be anywhere that a character can be played to:
+                # reserve, path, or battleground.
+                return [
+                    wielder for wielder in itertools.chain(
+                        itertools.chain.from_iterable(b.cards for b in self.active_battlegrounds),
+
+                        # TODO: There can't actually be NO active path, disallow it statically
+                        self.active_path.cards if self.active_path is not None else [],
+
+                        # Note: One player can play items to characters of a different player
+                        itertools.chain.from_iterable(p.reserve.cards for p in self.all_players())
+                    )
+                ]
+
+    def play_card(self, card: FactionCard, location: PlayLocation) -> None:
+        # TODO
+        pass
+
+    def move_card_from_reserve(self, card: FactionCard, location: PlayLocation) -> None:
+        # TODO
+        pass
+
+
+    def cards_with_doable_actions_for(self, player: Player) -> list[FactionCard]:
+        # TODO
+        pass
+
+    def perform_card_action(self, card: FactionCard) -> None:
+        # TODO
+        pass
+
