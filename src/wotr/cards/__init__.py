@@ -2,6 +2,7 @@ from typing import Callable
 
 from wotr.faction_card import FactionCard
 from wotr.enums import Faction, PlayerCharacter
+from wotr.cards import aragorn, frodo, saruman, witch_king
 
 faction_to_cards = {
     faction: [] for faction in Faction

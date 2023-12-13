@@ -72,7 +72,7 @@ def main():
     # 4. Draw cards and cycle
     for player in state.all_players():
         print("Each player draws 7 cards and cycles two.")
-        player.draw(7)
+        player.draw_n_to_hand(7)
         
         # Choice here
         player.cycle(2)
@@ -175,7 +175,7 @@ def main():
                         player.eliminate_specific(card1)
                         player.eliminate_specific(card2)
 
-                        player.draw(1)
+                        player.draw_n_to_hand(1)
                         did_action = True
                     
                     case ActionType.CARD_ACTION:
@@ -211,11 +211,8 @@ def main():
         # Combat Step
         print("resolving combat")
         
-        for bg in state.active_battlegrounds:
-            bg.resolve()
-        
-        state.active_path.resolve()
-
+        state.resolve_battlegrounds()
+        state.resolve_active_path()
         
         # Victory Check
         print("checking for victory")

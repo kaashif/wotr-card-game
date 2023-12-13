@@ -3,6 +3,8 @@ from dataclasses import dataclass
 from wotr.deck import Deck
 
 from wotr.faction_card import FactionCard
+from wotr.state import State
+from wotr.paths import all_paths
 
 @dataclass
 class Path:
@@ -13,13 +15,8 @@ class Path:
 
     cards: list[FactionCard]
 
-    def activate():
+    def activate(self, state: State) -> None:
         pass
-
-    def resolve():
-        pass
-
-all_paths: list[Path] = []
 
 class PathDeck(Deck[Path]):
     def __init__(self):

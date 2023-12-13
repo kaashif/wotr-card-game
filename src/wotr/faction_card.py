@@ -5,6 +5,7 @@ from wotr.battleground import Battleground
 
 from wotr.enums import Faction, CardType, CharacterClass
 from wotr.path import Path
+from wotr.state import PlayLocation, State
 
 @dataclass
 class FactionCard:
@@ -21,37 +22,13 @@ class FactionCard:
     just_played: bool = True
     items: list["FactionCard"] = []
 
-    def play_to_battleground(self):
+    def when_played(self, state: State) -> None:
         pass
 
-    def play_to_path(self):
-        pass
-    
-    def play_item_to_wielder(self):
+    def when_forsaken_from_top_of_deck(self, state: State) -> None:
         pass
 
-    def play_event(self):
-        pass
-
-    def play_to_reserve(self):
-        pass
-
-    def forsake(self):
-        pass
-
-    def forsake_from_top_of_deck(self):
-        pass
-
-    def eliminate(self):
-        pass
-
-    def reserve_action(self):
-        pass
-
-    def path_action(self):
-        pass
-
-    def item_action(self):
+    def when_played_to_location(self, state: State, location: PlayLocation) -> None:
         pass
 
     def battleground_attack(self) -> int:
@@ -81,12 +58,8 @@ class FactionCard:
         return self.card_type == CardType.CHARACTER and \
             path.path_number in self.allowed_paths
 
-def choose_faction_card(cards: list[FactionCard]) -> FactionCard:
-    for i in range(0, len(cards)):
-        card = cards[i]
-        print(f"{i}:\n{json.dumps(dataclasses.asdict(card), indent=2)}")
+    def can_do_action(self, state: State) -> bool:
+        return False
 
-    chosen_i = int(input("Choose a card index: "))
-
-    return cards[chosen_i]
-        
+    def perform_card_action(self, state: State) -> None:
+        pass

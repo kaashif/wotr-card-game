@@ -5,12 +5,11 @@ from typing import Iterable, Sequence
 from wotr.battleground import Battleground, BattlegroundDeck
 from wotr.faction_card import FactionCard
 from wotr.path import Path, PathDeck
+from wotr.reserve import Reserve
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
-from wotr.enums import CardType, Faction, Side
-
-class Reserve:
-    pass
+from wotr.enums import CardType, Faction, PlayerCharacter, Side
+from wotr.cards import character_to_factions
 
 class AsEvent:
     pass
@@ -41,16 +40,17 @@ class State:
 
     active_path: Path | None = None
 
+    character_to_player = {
+        PlayerCharacter.FRODO: frodo_player,
+        PlayerCharacter.WITCH_KING: witch_king_player,
+        PlayerCharacter.ARAGORN: aragorn_player,
+        PlayerCharacter.SARUMAN: saruman_player,
+    }
 
     def all_players(self) -> list[Player]:
-        return [
-            self.frodo_player,
-            self.witch_king_player,
-            self.aragorn_player,
-            self.saruman_player,
-        ]
+        return list(self.character_to_player.values())
 
-    def starting_side(self) -> Side:
+    def get_side_for_round(self) -> Side:
         return [Side.FREE, Side.SHADOW][(self.game_round-1) % 2]
 
     def player_turns(self) -> Iterable[Player]:
@@ -84,17 +84,17 @@ class State:
         return self.current_path_number > 9
         # TODO: also do the difference greater than 10 one
     
-    def get_playable_locations(self, card: FactionCard) -> Sequence[PlayLocation]:
+    def get_playable_locations(self, player: Player, card: FactionCard) -> Sequence[PlayLocation]:
         match card.card_type:
             case CardType.ARMY:
                 # Armies can be played to reserve or battlegrounds
-                return [Reserve()] + [
+                return [player.reserve] + [
                     battleground for battleground in self.active_battlegrounds
                     if card.is_playable_to_battleground(battleground)
                 ]
             case CardType.CHARACTER:
                 # Characters can be played to reserve, path, battleground
-                return [Reserve()] + [
+                return [player.reserve] + [
                     path for path in ([self.active_path] if self.active_path is not None else [])
                     if card.is_playable_to_path(path)
                 ] + [
@@ -121,20 +121,94 @@ class State:
                     )
                 ]
 
-    def play_card(self, card: FactionCard, location: PlayLocation) -> None:
-        # TODO
-        pass
+    def move_card_to_location(self, card: FactionCard, location: PlayLocation) -> None:
+        match location:
+            case Reserve():
+                location.cards.append(card)
+            case Path():
+                location.cards.append(card)
+            case Battleground():
+                location.cards.append(card)
+            case FactionCard():
+                location.add_item(card)
+ 
 
-    def move_card_from_reserve(self, card: FactionCard, location: PlayLocation) -> None:
-        # TODO
-        pass
+    def play_card(self, player: Player, card: FactionCard, location: PlayLocation) -> None:
+        player.cards.remove(card)
+        self.move_card_to_location(card, location)
 
+        # Note: card.when_played may result in a choice for the player!
+        # e.g. Legolas: When played you may take the Bow of Galadhrim from your draw deck into hand.
+        card.when_played(self)
 
-    def cards_with_doable_actions_for(self, player: Player) -> list[FactionCard]:
-        # TODO
-        pass
+        # When played to a specific location, the card may have a special effect.
+        card.when_played_to_location(self, location)
+
+        if isinstance(location, AsEvent):
+            player.eliminated_pile.add_to_bottom(card)
+
+    def move_card_from_reserve(self, player: Player, card: FactionCard, location: PlayLocation) -> None:
+        player.reserve.cards.remove(card)
+
+        self.move_card_to_location(card, location)
+
+        # The when_played doesn't trigger again because the card was already played to reserve.
+        # But the when_played_to_location does trigger, because the location is changing.
+        card.when_played_to_location(self, location)
+
+    def find_all_active_cards_for_player(self, player: Player) -> list[FactionCard]:
+        # All cards except item cards, since item cards live on other cards
+        played_cards_except_items = itertools.chain(
+            player.reserve.cards,
+            itertools.chain.from_iterable(b.cards for b in self.active_battlegrounds),
+            self.active_path.cards if self.active_path is not None else []
+        )
+
+        # Any card may be a character card with items on it
+        item_cards = itertools.chain.from_iterable(
+            card.items for card in played_cards_except_items
+        )
+
+        return itertools.chain(played_cards_except_items, item_cards)
+
+    def cards_with_doable_actions_for_player(self, player: Player) -> list[FactionCard]:
+        return [
+            card for card in self.find_all_active_cards_for_player(player)
+            if card.can_do_action(self)
+        ]
 
     def perform_card_action(self, card: FactionCard) -> None:
-        # TODO
-        pass
+        # I don't think any card has multiple actions.
+        # Lots of card actions result in choices.
+        card.perform_card_action(self)
 
+    
+    def get_card_owner(self, card: FactionCard) -> Player:
+        for character, factions in character_to_factions.items():
+            if card.faction in factions:
+                return self.character_to_player[character]
+
+    def eliminate_card_wherever_it_is(self, card: FactionCard) -> None:
+        for player in self.all_players():
+            if card in player.reserve.cards:
+                player.reserve.cards.remove(card)
+
+            if card in player.hand:
+                player.hand.remove(card)
+
+        for battleground in self.active_battlegrounds:
+            if card in battleground.cards:
+                battleground.cards.remove(card)
+
+        if self.active_path is not None and card in self.active_path.cards:
+            self.active_path.cards.remove(card)
+        
+        self.get_card_owner(card).eliminated_pile.add_to_bottom(card)
+
+    
+    def get_battleground_by_name(self, name: str) -> Battleground:
+        for battleground in itertools.chain(self.active_battlegrounds, self.free_scoring_area.battlegrounds, self.shadow_scoring_area.battlegrounds):
+            if battleground.title == name:
+                return battleground
+
+        raise Exception(f"No battleground with name {name}")

@@ -3,7 +3,8 @@ from dataclasses import dataclass
 from wotr.enums import Side, Faction
 from wotr.faction_card import FactionCard
 from wotr.deck import Deck
-
+from wotr.state import State
+from wotr.battlegrounds import all_battlegrounds
 
 @dataclass
 class Battleground:
@@ -16,13 +17,8 @@ class Battleground:
 
     cards: list[FactionCard]
 
-    def activate():
+    def activate(self, state: State) -> None:
         pass
-
-    def resolve():
-        pass
-
-all_battlegrounds: list[Battleground] = []
 
 class BattlegroundDeck(Deck):
     def __init__(self, side: Side):
