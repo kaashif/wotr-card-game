@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "wotr"
 version = "0.0.1"
-dependencies = []
+dependencies = ["mypy", "black"]
 
 [project.scripts]
 wotr = "wotr.main:main"
