@@ -3,6 +3,7 @@ from dataclasses import dataclass
 from wotr.enums import CardType, Side, Faction
 from wotr.faction_card import FactionCard
 from wotr.named import Named
+from wotr.util import indent
 
 
 @dataclass
@@ -14,6 +15,7 @@ class Battleground(Named):
     attacking_faction_icons: list[Faction]
     victory_point_value: int
     cards: list[FactionCard]
+    card_text: str
 
     def card_is_playable(self, card: FactionCard) -> bool:
         # Only armies and characters can be played to battlegrounds
@@ -27,6 +29,23 @@ class Battleground(Named):
     def name(self) -> str:
         return self.title
 
+    def __str__(self) -> str:
+        card_string = f"{self.title} ({self.side.name})\n"
+
+        if self.card_text != "":
+            card_string += f"Card Text: {self.card_text}\n"
+
+        card_string += f"Defense Icons: {self.defense_icons}\n"
+        card_string += f"Defending Faction Icons: {[faction.name for faction in self.defending_faction_icons]}\n"
+        card_string += f"Attacking Faction Icons: {[faction.name for faction in self.attacking_faction_icons]}\n"
+        card_string += f"Victory Point Value: {self.victory_point_value}\n"
+
+        # TODO: Print a summary of who's winning the battle.
+        if len(self.cards) > 0:
+            card_string += f"Cards:\n{'\n'.join(indent(f'{card.title} ({card.faction.name})', 2) for card in sorted(self.cards, key=lambda card: card.faction))}"
+
+        return card_string
+
 
 def make_battleground(
     title: str,
@@ -35,6 +54,7 @@ def make_battleground(
     defending_faction_icons: list[Faction],
     attacking_faction_icons: list[Faction],
     victory_point_value: int,
+    card_text: str,
 ) -> Battleground:
     return Battleground(
         title,
@@ -44,4 +64,5 @@ def make_battleground(
         attacking_faction_icons,
         victory_point_value,
         [],
+        card_text,
     )

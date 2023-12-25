@@ -1,5 +1,6 @@
 # Imported for the side effect of registering event handlers.
 import wotr.battleground_handlers
+from wotr.decision_type import DecisionType
 import wotr.path_handlers
 
 # Imported for the side effect of registering cards.
@@ -53,8 +54,7 @@ def main():
     print("Each player draws 7 cards and cycles two.")
     for player in game.all_players():
         player.draw_n_to_hand(7)
-
-        # Choice here
+        print(f"{player.character} must choose cards to cycle.")
         player.cycle(2)
 
     while True:
@@ -83,7 +83,9 @@ def main():
             did_action = False
 
             while not did_action:
-                action_type = player.agent.pick_no_fallback(list(ActionType))
+                action_type = player.agent.pick_no_fallback(
+                    DecisionType.WHICH_ACTION_TO_DO, list(ActionType)
+                )
 
                 if action_type is None:
                     print("you have to pick an action")
@@ -92,14 +94,17 @@ def main():
                 match action_type:
                     case ActionType.PLAY_CARD:
                         print("choose a card to play:")
-                        card = player.agent.pick_with_fallback(player.hand)
+                        card = player.agent.pick_with_fallback(
+                            DecisionType.WHICH_CARD_TO_PLAY, player.hand
+                        )
 
                         if card is None:
                             continue
 
                         print("choose a place to play it:")
                         place_to_play = player.agent.pick_with_fallback(
-                            list(game.get_playable_locations(player, card))
+                            DecisionType.WHERE_TO_PLAY_CARD,
+                            list(game.get_playable_locations(player, card)),
                         )
 
                         if place_to_play is None:
@@ -116,14 +121,18 @@ def main():
 
                     case ActionType.MOVE_FROM_RESERVE:
                         print("choose a card in reserve:")
-                        card = player.agent.pick_with_fallback(player.reserve.cards)
+                        card = player.agent.pick_with_fallback(
+                            DecisionType.WHICH_CARD_TO_MOVE_FROM_RESERVE,
+                            player.reserve.cards,
+                        )
 
                         if card is None:
                             continue
 
                         print("choose a place to move it:")
                         place_to_move = player.agent.pick_with_fallback(
-                            list(game.get_playable_locations(player, card))
+                            DecisionType.WHERE_TO_MOVE_CARD_FROM_RESERVE,
+                            list(game.get_playable_locations(player, card)),
                         )
 
                         if place_to_move is None:
@@ -134,7 +143,9 @@ def main():
 
                     case ActionType.CYCLE:
                         print("choose a card to cycle:")
-                        card = player.agent.pick_with_fallback(player.hand)
+                        card = player.agent.pick_with_fallback(
+                            DecisionType.WHICH_CARD_TO_CYCLE, player.hand
+                        )
 
                         if card is None:
                             continue
@@ -149,13 +160,17 @@ def main():
                             continue
 
                         print("choose the first card to eliminate:")
-                        card1 = player.agent.pick_with_fallback(player.hand)
+                        card1 = player.agent.pick_with_fallback(
+                            DecisionType.WHICH_CARD_TO_ELIMINATE, player.hand
+                        )
 
                         if card1 is None:
                             continue
 
                         print("choose the second card to eliminate:")
-                        card2 = player.agent.pick_with_fallback(player.hand)
+                        card2 = player.agent.pick_with_fallback(
+                            DecisionType.WHICH_CARD_TO_ELIMINATE, player.hand
+                        )
 
                         if card2 is None:
                             continue
@@ -169,7 +184,8 @@ def main():
                     case ActionType.CARD_ACTION:
                         print("choose a card with an action:")
                         card = player.agent.pick_with_fallback(
-                            game.cards_with_doable_actions_for_player(player)
+                            DecisionType.WHICH_CARD_ACTION_TO_DO,
+                            game.cards_with_doable_actions_for_player(player),
                         )
 
                         if card is None:

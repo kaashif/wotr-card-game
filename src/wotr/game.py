@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import Iterable, Sequence, TypeAlias
 from wotr.battleground import Battleground
 from wotr.battleground_deck import BattlegroundDeck
+from wotr.decision_type import DecisionType
 from wotr.event_handler import Event, EventHandler, EventType
 from wotr.faction_card import FactionCard
 from wotr.named import Named
@@ -309,7 +310,9 @@ class Game:
         if len(cards) == 0:
             raise Exception("card list is empty!")
 
-        card = player.agent.pick_no_fallback(cards)
+        card = player.agent.pick_no_fallback(
+            DecisionType.WHICH_CARD_TO_ELIMINATE, cards
+        )
 
         # We cannot just remove card from cards. That works if cards is self.hand
         # or self.reserve.cards, but not if cards is just a list of choices not directly
@@ -340,7 +343,9 @@ class Game:
         if len(reserve_items) > 0:
             possible_forsake_locations.append("reserve item")
 
-        forsake_location = player.agent.pick_no_fallback(possible_forsake_locations)
+        forsake_location = player.agent.pick_no_fallback(
+            DecisionType.WHERE_TO_FORSAKE_FROM, possible_forsake_locations
+        )
 
         if forsake_location == "draw deck":
             self.forsake_from_draw_deck(player)
@@ -365,4 +370,5 @@ class Game:
         return view
 
     def trigger_event(self, event_type: EventType, subject: Named) -> None:
+        print(f"{event_type.name}\n{subject}")
         self.event_to_handler[Event(event_type, subject.name())](self)

@@ -8,6 +8,7 @@ all_paths: list[Path] = [
         path_number=1,
         defense_icons=0,
         victory_point_value=1,
+        card_text="The Hobbit player draws 2 cards.",
     ),
 ]
 

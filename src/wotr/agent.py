@@ -1,6 +1,7 @@
 from abc import ABC, abstractmethod
 import random
-from typing import TypeVar, cast
+from typing import TypeVar, cast, override
+from wotr.decision_type import DecisionType, get_nice_string
 from wotr.util import indent
 
 T = TypeVar("T")
@@ -8,15 +9,17 @@ T = TypeVar("T")
 
 class Agent(ABC):
     @abstractmethod
-    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
+    def pick_with_fallback(
+        self, decision_type: DecisionType, choices: list[T], fallback: str = "back"
+    ) -> T | None:
         raise NotImplementedError()
 
     @abstractmethod
-    def pick_no_fallback(self, choices: list[T]) -> T:
+    def pick_no_fallback(self, decision_type: DecisionType, choices: list[T]) -> T:
         raise NotImplementedError()
 
-    def pick_boolean(self) -> bool:
-        return self.pick_no_fallback([True, False])
+    def pick_boolean(self, decision_type: DecisionType) -> bool:
+        return self.pick_no_fallback(decision_type, [True, False])
 
 
 class HumanAgent(Agent):
@@ -45,7 +48,11 @@ class HumanAgent(Agent):
 
         return choices[chosen_index]
 
-    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
+    @override
+    def pick_with_fallback(
+        self, decision_type: DecisionType, choices: list[T], fallback: str = "back"
+    ) -> T | None:
+        print(get_nice_string(decision_type))
         choices_and_back = choices + [fallback]
         choice = self.pick_from_list(choices_and_back)
 
@@ -54,18 +61,24 @@ class HumanAgent(Agent):
 
         return cast(T, choice)
 
-    def pick_no_fallback(self, choices: list[T]) -> T:
+    @override
+    def pick_no_fallback(self, decision_type: DecisionType, choices: list[T]) -> T:
+        print(get_nice_string(decision_type))
         choice = self.pick_from_list(choices)
         assert choice is not None
         return choice
 
 
 class RandomAgent(Agent):
-    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
+    @override
+    def pick_with_fallback(
+        self, decision_type: DecisionType, choices: list[T], fallback: str = "back"
+    ) -> T | None:
         if len(choices) == 0:
             return None
 
         return random.choice(choices)
 
-    def pick_no_fallback(self, choices: list[T]) -> T:
+    @override
+    def pick_no_fallback(self, decision_type: DecisionType, choices: list[T]) -> T:
         return random.choice(choices)

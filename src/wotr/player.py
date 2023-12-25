@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from wotr.agent import Agent
+from wotr.decision_type import DecisionType
 
 from wotr.deck import Deck
 from wotr.faction_card import FactionCard
@@ -35,6 +36,7 @@ class Player:
             return None
 
         card = self.draw_deck.draw()
+        print(f"Drew '{card.title}'")
 
         # If draw deck is depleted, recycle immediately
         if self.draw_deck.is_empty():
@@ -48,7 +50,7 @@ class Player:
         for _ in range(n):
             card = self.draw_one()
             if card is None:
-                print("couldn't draw a card")
+                print("Couldn't draw a card")
             else:
                 cards.append(card)
 
@@ -62,10 +64,12 @@ class Player:
         print("Choose a card to cycle")
         if len(self.hand) == 0:
             raise Exception("No cards to cycle")
-        chosen_card = self.agent.pick_no_fallback(self.hand)
+        chosen_card = self.agent.pick_no_fallback(
+            DecisionType.WHICH_CARD_TO_CYCLE, self.hand
+        )
         self.hand.remove(chosen_card)
         self.cycle_pile.add_to_bottom(chosen_card)
-        print(f"Cycled: {chosen_card.title}")
+        print(f"Cycled: '{chosen_card.name()}'")
 
     def cycle(self, n: int) -> None:
         for _ in range(n):
