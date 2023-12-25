@@ -2,9 +2,13 @@ import itertools
 
 from dataclasses import dataclass
 from typing import Iterable, Sequence, TypeAlias
-from wotr.battleground import Battleground, BattlegroundDeck
+from wotr.battleground import Battleground
+from wotr.battleground_deck import BattlegroundDeck
+from wotr.event_handler import Event, EventHandler, EventType
 from wotr.faction_card import FactionCard
-from wotr.path import Path, PathDeck
+from wotr.named import Named
+from wotr.path import Path
+from wotr.path_deck import PathDeck
 from wotr.reserve import Reserve
 from wotr.scoring_area import FreeScoringArea, ShadowScoringArea
 from wotr.player import Player
@@ -22,7 +26,7 @@ PlayLocation: TypeAlias = Reserve | Path | Battleground | FactionCard | AsEvent
 
 
 @dataclass
-class State:
+class Game:
     shadow_scoring_area: ShadowScoringArea
     free_scoring_area: FreeScoringArea
 
@@ -37,6 +41,8 @@ class State:
     path_deck: PathDeck
 
     active_battlegrounds: list[Battleground]
+
+    event_to_handler: dict[Event, EventHandler]
 
     game_round: int = 1
     current_path_number: int = 1
@@ -133,7 +139,7 @@ class State:
                         for path in (
                             [self.active_path] if self.active_path is not None else []
                         )
-                        if card.is_playable_to_path(path)
+                        if path.card_is_playable(card)
                     ]
                     + [
                         battleground
@@ -173,7 +179,7 @@ class State:
             case Battleground():
                 location.cards.append(card)
             case FactionCard():
-                location.add_item(card)
+                location.items.append(card)
 
     def play_card(
         self, player: Player, card: FactionCard, location: PlayLocation
@@ -183,10 +189,10 @@ class State:
 
         # Note: card.when_played may result in a choice for the player!
         # e.g. Legolas: When played you may take the Bow of Galadhrim from your draw deck into hand.
-        card.when_played(self)
+        self.when_played(card)
 
         # When played to a specific location, the card may have a special effect.
-        card.when_played_to_location(self, location)
+        self.when_played_to_location(card, location)
 
         if isinstance(location, AsEvent):
             player.eliminated_pile.add_to_bottom(card)
@@ -200,7 +206,7 @@ class State:
 
         # The when_played doesn't trigger again because the card was already played to reserve.
         # But the when_played_to_location does trigger, because the location is changing.
-        card.when_played_to_location(self, location)
+        self.when_played_to_location(card, location)
 
     def find_all_active_cards_for_player(self, player: Player) -> list[FactionCard]:
         # All cards except item cards, since item cards live on other cards
@@ -221,13 +227,8 @@ class State:
         return [
             card
             for card in self.find_all_active_cards_for_player(player)
-            if card.can_do_action(self)
+            if self.can_do_action(card)
         ]
-
-    def perform_card_action(self, card: FactionCard) -> None:
-        # I don't think any card has multiple actions.
-        # Lots of card actions result in choices.
-        card.perform_card_action(self)
 
     def get_card_owner(self, card: FactionCard) -> Player:
         for character, factions in character_to_factions.items():
@@ -271,3 +272,97 @@ class State:
     def resolve_active_path(self) -> None:
         # TODO
         pass
+
+    def when_played(self, card: FactionCard) -> None:
+        pass
+
+    def when_forsaken_from_top_of_deck(self, card: FactionCard) -> None:
+        pass
+
+    def when_forsaken_from_reserve(self, card: FactionCard) -> None:
+        pass
+
+    def when_played_to_location(
+        self, card: FactionCard, location: PlayLocation
+    ) -> None:
+        pass
+
+    def can_do_action(self, card: FactionCard) -> bool:
+        return False
+
+    def perform_card_action(self, card: FactionCard) -> None:
+        pass
+
+    def forsake_from_draw_deck(self, player: Player) -> None:
+        if player.draw_deck.is_empty():
+            return
+
+        card = player.draw_deck.draw()
+
+        player.eliminated_pile.add_to_bottom(card)
+
+        # Some cards have effects when forsaken from the top of the deck
+        # e.g. when eliminated, cycle instead.
+        self.when_forsaken_from_top_of_deck(card)
+
+    def forsake_from_list(self, player: Player, cards: list[FactionCard]) -> None:
+        if len(cards) == 0:
+            raise Exception("card list is empty!")
+
+        card = player.agent.pick_no_fallback(cards)
+
+        # We cannot just remove card from cards. That works if cards is self.hand
+        # or self.reserve.cards, but not if cards is just a list of choices not directly
+        # part of the game state. We need to eliminate cards *wherever it really is*.
+        player.eliminate_specific(card)
+
+        # p11: If a character is eliminated, all items it is wielding are also eliminated.
+        for item in card.items:
+            player.eliminated_pile.add_to_bottom(item)
+
+    def forsake(self, player: Player) -> None:
+        # p13: When forsaking you can either forsake from the top of the deck, hand, or reserve.
+        # p13: You can forsake an item from its wielder.
+        # Note: you cannot forsake items or characters from battlegrounds or path.
+        possible_forsake_locations = []
+
+        if not player.draw_deck.is_empty() or not player.cycle_pile.is_empty():
+            possible_forsake_locations.append("draw deck")
+
+        if len(player.hand) > 0:
+            possible_forsake_locations.append("hand")
+
+        if len(player.reserve.cards) > 0:
+            possible_forsake_locations.append("reserve")
+
+        reserve_items = [item for card in player.reserve.cards for item in card.items]
+
+        if len(reserve_items) > 0:
+            possible_forsake_locations.append("reserve item")
+
+        forsake_location = player.agent.pick_no_fallback(possible_forsake_locations)
+
+        if forsake_location == "draw deck":
+            self.forsake_from_draw_deck(player)
+        elif forsake_location == "hand":
+            self.forsake_from_list(player, player.hand)
+        elif forsake_location == "reserve":
+            self.forsake_from_list(player, player.reserve.cards)
+        elif forsake_location == "reserve item":
+            self.forsake_from_list(player, reserve_items)
+
+    def get_player_view(self, player: Player) -> str:
+        view = ""
+
+        view += f"Player {player.character.name}\n"
+        view += f"Hand: {player.hand}\n"
+        view += f"Cycle pile: {player.cycle_pile}\n"
+        view += f"Eliminated pile: {player.eliminated_pile}\n"
+
+        view += f"Active batlegrounds: {self.active_battlegrounds}\n"
+        view += f"Active path: {self.active_path}\n"
+
+        return view
+
+    def trigger_event(self, event_type: EventType, subject: Named) -> None:
+        self.event_to_handler[Event(event_type, subject.name())](self)

@@ -26,3 +26,11 @@ class ShadowScoringArea:
     def total_victory_points(self) -> int:
         # TODO
         raise NotImplementedError()
+
+
+def make_free_scoring_area() -> FreeScoringArea:
+    return FreeScoringArea([], [])
+
+
+def make_shadow_scoring_area() -> ShadowScoringArea:
+    return ShadowScoringArea([], [], 0)

@@ -1,23 +1,19 @@
 from dataclasses import dataclass
-from typing import Callable
 
 from wotr.enums import CardType, Side, Faction
 from wotr.faction_card import FactionCard
-from wotr.deck import Deck
-from wotr.state import State
-from wotr.battlegrounds import all_battlegrounds
+from wotr.named import Named
 
 
 @dataclass
-class Battleground:
+class Battleground(Named):
+    title: str
     side: Side
     defense_icons: int
     defending_faction_icons: list[Faction]
-    title: str
     attacking_faction_icons: list[Faction]
     victory_point_value: int
     cards: list[FactionCard]
-    activate_callback: Callable[["Battleground", State], None]
 
     def card_is_playable(self, card: FactionCard) -> bool:
         # Only armies and characters can be played to battlegrounds
@@ -28,16 +24,24 @@ class Battleground:
             in self.attacking_faction_icons + self.defending_faction_icons
         )
 
-    def activate(self, state: State) -> None:
-        self.activate_callback(self, state)
+    def name(self) -> str:
+        return self.title
 
 
-class BattlegroundDeck(Deck):
-    def __init__(self, side: Side):
-        super().__init__(
-            [
-                battleground
-                for battleground in all_battlegrounds
-                if battleground.side == side
-            ]
-        )
+def make_battleground(
+    title: str,
+    side: Side,
+    defense_icons: int,
+    defending_faction_icons: list[Faction],
+    attacking_faction_icons: list[Faction],
+    victory_point_value: int,
+) -> Battleground:
+    return Battleground(
+        title,
+        side,
+        defense_icons,
+        defending_faction_icons,
+        attacking_faction_icons,
+        victory_point_value,
+        [],
+    )
