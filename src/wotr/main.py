@@ -6,7 +6,7 @@ import wotr.path_handlers
 # Imported for the side effect of registering cards.
 from wotr.cards import aragorn, frodo, saruman, witch_king
 
-from wotr.agent import HumanAgent
+from wotr.agent import HumanAgent, RandomAgent
 from wotr.battleground_deck import BattlegroundDeck, get_battlegrounds_for_side
 from wotr.path_deck import PathDeck, all_paths
 from wotr.game import Game
@@ -15,16 +15,18 @@ from wotr.player import Player
 from wotr.enums import Side, PlayerCharacter, ActionType
 from wotr.event_handler import EventType, event_to_handler
 
+agent = RandomAgent
+
 
 def main():
     # TODO: random number generator must be seeded at the start so objects behave deterministically
     game = Game(
         shadow_scoring_area=make_shadow_scoring_area(),
         free_scoring_area=make_free_scoring_area(),
-        frodo_player=Player(PlayerCharacter.FRODO, HumanAgent()),
-        witch_king_player=Player(PlayerCharacter.WITCH_KING, HumanAgent()),
-        aragorn_player=Player(PlayerCharacter.ARAGORN, HumanAgent()),
-        saruman_player=Player(PlayerCharacter.SARUMAN, HumanAgent()),
+        frodo_player=Player(PlayerCharacter.FRODO, agent()),
+        witch_king_player=Player(PlayerCharacter.WITCH_KING, agent()),
+        aragorn_player=Player(PlayerCharacter.ARAGORN, agent()),
+        saruman_player=Player(PlayerCharacter.SARUMAN, agent()),
         shadow_battleground_deck=BattlegroundDeck(
             get_battlegrounds_for_side(Side.SHADOW)
         ),
@@ -62,6 +64,7 @@ def main():
 
         # Location Step
         # The starting player first activates one battleground then one path
+        # TODO: Need to implement p8 rules for battleground decks running out.
         if game.get_side_for_round() == Side.FREE:
             game.active_battlegrounds.append(game.free_battleground_deck.draw())
         else:

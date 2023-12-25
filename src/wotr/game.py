@@ -89,7 +89,7 @@ class Game:
 
         while True:
             yield self.all_players()[current_player_index]
-            current_player_index += 1
+            current_player_index = (current_player_index + 1) % 4
 
     def end_game(self) -> None:
         print("GAME OVER!")
