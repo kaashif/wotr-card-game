@@ -1,7 +1,7 @@
 import itertools
 
 from dataclasses import dataclass
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, TypeAlias
 from wotr.battleground import Battleground, BattlegroundDeck
 from wotr.faction_card import FactionCard
 from wotr.path import Path, PathDeck
@@ -16,7 +16,7 @@ class AsEvent:
 
 # You can play a card to reserve, path combat, battleground combat,
 # onto another card as an item, or it's an event and resolves, then is eliminated.
-PlayLocation = Reserve | Path | Battleground | FactionCard | AsEvent
+PlayLocation: TypeAlias = Reserve | Path | Battleground | FactionCard | AsEvent
 
 @dataclass
 class State:
@@ -40,15 +40,33 @@ class State:
 
     active_path: Path | None = None
 
-    character_to_player = {
-        PlayerCharacter.FRODO: frodo_player,
-        PlayerCharacter.WITCH_KING: witch_king_player,
-        PlayerCharacter.ARAGORN: aragorn_player,
-        PlayerCharacter.SARUMAN: saruman_player,
-    }
+    def character_to_player(self, character: PlayerCharacter) -> Player:
+        map = {
+            PlayerCharacter.FRODO: self.frodo_player,
+            PlayerCharacter.WITCH_KING: self.witch_king_player,
+            PlayerCharacter.ARAGORN: self.aragorn_player,
+            PlayerCharacter.SARUMAN: self.saruman_player,
+        }
+
+        return map[character]
+
+    def faction_to_player(self, faction: Faction) -> Player:
+        if faction in [Faction.DWARF, Faction.HOBBIT, Faction.ROHAN, Faction.WIZARD]:
+            return self.frodo_player
+        
+        if faction in [Faction.MORDOR]:
+            return self.witch_king_player
+        
+        if faction in [Faction.DUNEDAIN, Faction.ELF]:
+            return self.aragorn_player
+        
+        if faction in [Faction.ISENGARD, Faction.MONSTROUS, Faction.SOUTHRON]:
+            return self.saruman_player
+
+        raise Exception(f"Unknown faction {faction}")
 
     def all_players(self) -> list[Player]:
-        return list(self.character_to_player.values())
+        return list(self.character_to_player(character) for character in PlayerCharacter)
 
     def get_side_for_round(self) -> Side:
         return [Side.FREE, Side.SHADOW][(self.game_round-1) % 2]
@@ -90,7 +108,7 @@ class State:
                 # Armies can be played to reserve or battlegrounds
                 return [player.reserve] + [
                     battleground for battleground in self.active_battlegrounds
-                    if card.is_playable_to_battleground(battleground)
+                    if battleground.card_is_playable(card)
                 ]
             case CardType.CHARACTER:
                 # Characters can be played to reserve, path, battleground
@@ -99,10 +117,10 @@ class State:
                     if card.is_playable_to_path(path)
                 ] + [
                     battleground for battleground in self.active_battlegrounds
-                    if card.is_playable_to_battleground(battleground)
+                    if battleground.card_is_playable(card)
                 ]
             case CardType.EVENT:
-                # Events aren't really played "to" anywhere
+                # Events aren't really played "to" anywhere, but they're still played
                 return [AsEvent()]
 
             case CardType.ITEM:
@@ -134,7 +152,7 @@ class State:
  
 
     def play_card(self, player: Player, card: FactionCard, location: PlayLocation) -> None:
-        player.cards.remove(card)
+        player.hand.remove(card)
         self.move_card_to_location(card, location)
 
         # Note: card.when_played may result in a choice for the player!
@@ -169,7 +187,7 @@ class State:
             card.items for card in played_cards_except_items
         )
 
-        return itertools.chain(played_cards_except_items, item_cards)
+        return list(itertools.chain(played_cards_except_items, item_cards))
 
     def cards_with_doable_actions_for_player(self, player: Player) -> list[FactionCard]:
         return [
@@ -186,7 +204,9 @@ class State:
     def get_card_owner(self, card: FactionCard) -> Player:
         for character, factions in character_to_factions.items():
             if card.faction in factions:
-                return self.character_to_player[character]
+                return self.character_to_player(character)
+        
+        raise Exception(f"Could not find owner for card {card}")
 
     def eliminate_card_wherever_it_is(self, card: FactionCard) -> None:
         for player in self.all_players():
@@ -212,3 +232,11 @@ class State:
                 return battleground
 
         raise Exception(f"No battleground with name {name}")
+
+    def resolve_battlegrounds(self) -> None:
+        # TODO
+        pass
+
+    def resolve_active_path(self) -> None:
+        # TODO
+        pass

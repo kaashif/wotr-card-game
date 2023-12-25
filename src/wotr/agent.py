@@ -1,14 +1,14 @@
 import random
-from typing import TypeVar
+from typing import TypeVar, cast
 
 T = TypeVar("T")
 
 class Agent:
-    def pick_with_fallback(self, choices: list[T], fallback: str) -> T | None:
+    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
         raise NotImplementedError()
 
     def pick_no_fallback(self, choices: list[T]) -> T:
-        return NotImplementedError()
+        raise NotImplementedError()
 
     def pick_boolean(self) -> bool:
         return self.pick_no_fallback([True, False])
@@ -40,14 +40,14 @@ class HumanAgent(Agent):
         return choices[chosen_index]
 
 
-    def pick_with_fallback(self, choices: list[T], fallback: str) -> T | None:
+    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
         choices_and_back = choices + [fallback]
         choice = self.pick_from_list(choices_and_back)
 
         if choice == fallback:
             return None
 
-        return choice
+        return cast(T, choice)
 
     def pick_no_fallback(self, choices: list[T]) -> T:
         choice = self.pick_from_list(choices)
@@ -56,8 +56,11 @@ class HumanAgent(Agent):
 
 
 class RandomAgent(Agent):
-    def pick_with_fallback(self, choices: list[T], fallback: str) -> T | None:
+    def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
         if len(choices) == 0:
             return None
 
+        return random.choice(choices)
+
+    def pick_no_fallback(self, choices: list[T]) -> T:
         return random.choice(choices)

@@ -1,5 +1,6 @@
 import random
 from dataclasses import dataclass
+from typing import Callable
 from wotr.deck import Deck
 
 from wotr.faction_card import FactionCard
@@ -8,15 +9,15 @@ from wotr.paths import all_paths
 
 @dataclass
 class Path:
-    defense_icons: int
     title: str
     path_number: int
+    defense_icons: int
     victory_point_value: int
-
     cards: list[FactionCard]
+    activate_callback: Callable[["Path", State], None]
 
     def activate(self, state: State) -> None:
-        pass
+        self.activate_callback(self, state)
 
 class PathDeck(Deck[Path]):
     def __init__(self):

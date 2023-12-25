@@ -1,8 +1,5 @@
 import json
 from dataclasses import dataclass
-import dataclasses
-from wotr.battleground import Battleground
-
 from wotr.enums import Faction, CardType, CharacterClass
 from wotr.path import Path
 from wotr.state import PlayLocation, State
@@ -28,6 +25,9 @@ class FactionCard:
     def when_forsaken_from_top_of_deck(self, state: State) -> None:
         pass
 
+    def when_forsaken_from_reserve(self, state: State) -> None:
+        pass
+
     def when_played_to_location(self, state: State, location: PlayLocation) -> None:
         pass
 
@@ -45,14 +45,6 @@ class FactionCard:
 
     def add_item(self, item: "FactionCard") -> None:
         self.items.append(item)
-
-    def is_playable_to_battleground(self, battleground: Battleground) -> bool:
-        # Only armies and characters can be played to battlegrounds
-        if self.card_type not in [CardType.ARMY, CardType.CHARACTER]:
-            return False
-
-        # Given that the card type is right, the battleground faction needs to match
-        return self.faction in battleground.attacking_faction_icons + battleground.defending_faction_icons
 
     def is_playable_to_path(self, path: Path) -> bool:
         return self.card_type == CardType.CHARACTER and \

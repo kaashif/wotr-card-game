@@ -14,7 +14,7 @@ def battleground(
     attacking_faction_icons: list[Faction],
     victory_point_value: int,
 ) -> Callable:
-    def create_battleground_given_activate(activate: Callable[[State], None]) -> None:
+    def create_battleground_given_activate(activate: Callable[[Battleground, State], None]) -> None:
         battleground_object = Battleground(
             side,
             defense_icons,
@@ -23,31 +23,32 @@ def battleground(
             attacking_faction_icons,
             victory_point_value,
             [],
+            activate,
         )
-        battleground_object.activate = activate
-        all_battlegrounds.append(battleground)
+        all_battlegrounds.append(battleground_object)
     return create_battleground_given_activate
 
 @battleground(
-    "Helms Deep"
+    "Helms Deep",
     side=Side.FREE,
     defense_icons=2,
     defending_faction_icons=[Faction.WIZARD, Faction.ROHAN],
     attacking_faction_icons=[Faction.ISENGARD],
     victory_point_value=2,
 )
-def helms_deep(state: State) -> None:
-    rohan_player = state.faction_to_player[Faction.ROHAN]
+def helms_deep(self: Battleground, state: State) -> None:
+    rohan_player = state.faction_to_player(Faction.ROHAN)
+
+    # Draw 5, may play one army or character on Helms Deep
     cards = rohan_player.draw_n(5)
-
-    # May play one army or character on Helms Deep
-    playable_cards = [card for card in cards if card.is_playable_to_battleground(helms_deep) and (card.card_type == CardType.ARMY or card.card_type == CardType.CHARACTER)]
-
-    if len(playable_cards) == 0:
-        return
+    playable_cards = [card for card in cards if self.card_is_playable(card)]
 
     if rohan_player.agent.pick_boolean():
         # TODO: no cards?
         card = rohan_player.agent.pick_no_fallback(playable_cards)
         helms_deep_location = state.get_battleground_by_name("Helms Deep")
         state.play_card(rohan_player, card, helms_deep_location)
+
+    # Cards not played are cycled
+    for card in playable_cards:
+        rohan_player.cycle_pile.add_to_bottom(card)
