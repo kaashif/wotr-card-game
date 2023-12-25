@@ -1,13 +1,17 @@
+from abc import ABC, abstractmethod
 import random
 from typing import TypeVar, cast
+from wotr.util import indent
 
 T = TypeVar("T")
 
 
-class Agent:
+class Agent(ABC):
+    @abstractmethod
     def pick_with_fallback(self, choices: list[T], fallback: str = "back") -> T | None:
         raise NotImplementedError()
 
+    @abstractmethod
     def pick_no_fallback(self, choices: list[T]) -> T:
         raise NotImplementedError()
 
@@ -22,7 +26,7 @@ class HumanAgent(Agent):
             return None
 
         for i in range(len(choices)):
-            print(f"{i}: {choices[i]}")
+            print(f"{i}:\n{indent(str(choices[i]), 2)}\n")
 
         while True:
             try:

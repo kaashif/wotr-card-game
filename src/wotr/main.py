@@ -12,7 +12,7 @@ from wotr.game import Game
 from wotr.scoring_area import make_free_scoring_area, make_shadow_scoring_area
 from wotr.player import Player
 from wotr.enums import Side, PlayerCharacter, ActionType
-from wotr.event_handler import Event, EventType, event_to_handler
+from wotr.event_handler import EventType, event_to_handler
 
 
 def main():
