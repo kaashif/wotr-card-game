@@ -1,7 +1,5 @@
-from typing import Callable
-
 from wotr.faction_card import FactionCard
-from wotr.enums import Faction, PlayerCharacter
+from wotr.enums import CardType, Faction, PlayerCharacter
 
 faction_to_cards: dict[Faction, list[FactionCard]] = {
     faction: [] for faction in Faction
@@ -32,10 +30,26 @@ def get_cards_for_character(character: PlayerCharacter) -> list[FactionCard]:
 
     return sum([faction_to_cards[faction] for faction in factions], [])
 
+def register_card(card: FactionCard) -> None:
+    faction_to_cards[card.faction].append(card)
 
-def card(faction: Faction) -> Callable[[type], type]:
-    def decorator(card_class: type) -> type:
-        faction_to_cards[faction].append(card_class())
-        return card_class
-
-    return decorator
+def register_army(
+    title: str,
+    faction: Faction,
+    base_battleground_attack: int,
+    base_battleground_defense: int,
+) -> None:
+    register_card(FactionCard(
+        title=title,
+        faction=faction,
+        card_type=CardType.ARMY,
+        base_battleground_attack=base_battleground_attack,
+        base_battleground_defense=base_battleground_defense,
+        base_leadership_attack=0,
+        base_leadership_defense=0,
+        allowed_paths=[],
+        path_combat_icons=0,
+        allowed_wielders=[],
+        just_played=False,
+        items=[]
+    ))

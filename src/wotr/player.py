@@ -47,7 +47,9 @@ class Player:
 
         for _ in range(n):
             card = self.draw_one()
-            if card is not None:
+            if card is None:
+                print("couldn't draw a card")
+            else:
                 cards.append(card)
 
         return cards

@@ -16,7 +16,7 @@ all_battlegrounds: list[Battleground] = [
 
 class BattlegroundDeck(Deck):
     def __init__(self, battlegrounds: list[Battleground]):
-        self.battlegrounds = battlegrounds
+        self.cards = battlegrounds
 
 
 def get_battlegrounds_for_side(side: Side) -> list[Battleground]:

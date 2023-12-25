@@ -14,7 +14,7 @@ all_paths: list[Path] = [
 
 class PathDeck(Deck[Path]):
     def __init__(self, paths: list[Path]):
-        self.paths = paths
+        self.cards = paths
 
     def draw_path(self, current_path: int) -> Path:
         eligible_paths = [

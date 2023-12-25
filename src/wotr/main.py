@@ -1,6 +1,9 @@
-# These are imported for the side effect of registering event handlers.
+# Imported for the side effect of registering event handlers.
 import wotr.battleground_handlers
 import wotr.path_handlers
+
+# Imported for the side effect of registering cards.
+from wotr.cards import aragorn, frodo, saruman, witch_king
 
 from wotr.agent import HumanAgent
 from wotr.battleground_deck import BattlegroundDeck, get_battlegrounds_for_side
@@ -47,8 +50,8 @@ def main():
     # Path deck is already arranged
 
     # 4. Draw cards and cycle
+    print("Each player draws 7 cards and cycles two.")
     for player in game.all_players():
-        print("Each player draws 7 cards and cycles two.")
         player.draw_n_to_hand(7)
 
         # Choice here

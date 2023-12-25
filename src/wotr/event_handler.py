@@ -12,6 +12,9 @@ class Event:
     event_type: EventType
     subject_name: str
 
+    def __hash__(self) -> int:
+        return hash((self.event_type, self.subject_name))
+
 
 T = TypeVar("T")
 EventHandler: TypeAlias = Callable[[T], None]
