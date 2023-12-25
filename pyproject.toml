@@ -10,4 +10,5 @@ dependencies = ["mypy", "black"]
 [project.scripts]
 wotr = "wotr.main:main"
 
+[tool.pydeps]
 
