@@ -8,6 +8,7 @@ from wotr.enums import PlayerCharacter
 from wotr.cards import get_cards_for_character
 from wotr.state import State
 
+
 @dataclass
 class Player:
     hand: list[FactionCard]
@@ -64,10 +65,10 @@ class Player:
         self.hand.remove(chosen_card)
         self.cycle_pile.add_to_bottom(chosen_card)
         print(f"Cycled: {chosen_card.title}")
-    
+
     def cycle(self, n: int) -> None:
         for _ in range(n):
-            self.cycle_one() 
+            self.cycle_one()
 
     def can_pass(self) -> bool:
         # TODO
@@ -75,27 +76,26 @@ class Player:
 
     def pass_turn(self):
         self.passed = True
-        
+
     def unpass_turn(self):
         self.passed = False
 
     def use_ring_token(self):
         if self.used_ring_token:
             raise Exception("ring token already used!")
-        
+
         self.used_ring_token = False
         self.draw_n_to_hand(2)
 
-    
     def can_cycle(self):
         return len(self.hand) > 0
-    
+
     def forsake_from_draw_deck(self, state: State) -> None:
         if self.draw_deck.is_empty():
             return
 
         card = self.draw_deck.draw()
-        
+
         self.eliminated_pile.add_to_bottom(card)
 
         # Some cards have effects when forsaken from the top of the deck
@@ -127,7 +127,7 @@ class Player:
             possible_forsake_locations.append("draw deck")
 
         if len(self.hand) > 0:
-            possible_forsake_locations.append("hand")   
+            possible_forsake_locations.append("hand")
 
         if len(self.reserve.cards) > 0:
             possible_forsake_locations.append("reserve")
@@ -144,7 +144,7 @@ class Player:
         elif forsake_location == "hand":
             self.forsake_from_list(state, self.hand)
         elif forsake_location == "reserve":
-            self.forsake_from_list(state, self.reserve.cards) 
+            self.forsake_from_list(state, self.reserve.cards)
         elif forsake_location == "reserve item":
             self.forsake_from_list(state, reserve_items)
 

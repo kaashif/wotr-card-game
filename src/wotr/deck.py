@@ -4,6 +4,7 @@ import random
 
 T = TypeVar("T")
 
+
 @dataclass
 class Deck(Generic[T]):
     cards: list[T]
@@ -11,14 +12,13 @@ class Deck(Generic[T]):
     def is_empty(self) -> bool:
         return len(self.cards) == 0
 
-
     def draw(self) -> T:
         return self.cards.pop(0)
 
     def add_to_bottom(self, card: T) -> None:
-         self.cards.append(card)
+        self.cards.append(card)
 
-    def shuffle_into(self, other: 'Deck[T]') -> None:
+    def shuffle_into(self, other: "Deck[T]") -> None:
         other.cards += self.cards
         self.cards = []
         other.shuffle()

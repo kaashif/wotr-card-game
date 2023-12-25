@@ -6,6 +6,7 @@ from wotr.state import State
 
 all_battlegrounds: list[Battleground] = []
 
+
 def battleground(
     title: str,
     side: Side,
@@ -14,7 +15,9 @@ def battleground(
     attacking_faction_icons: list[Faction],
     victory_point_value: int,
 ) -> Callable:
-    def create_battleground_given_activate(activate: Callable[[Battleground, State], None]) -> None:
+    def create_battleground_given_activate(
+        activate: Callable[[Battleground, State], None]
+    ) -> None:
         battleground_object = Battleground(
             side,
             defense_icons,
@@ -26,7 +29,9 @@ def battleground(
             activate,
         )
         all_battlegrounds.append(battleground_object)
+
     return create_battleground_given_activate
+
 
 @battleground(
     "Helms Deep",

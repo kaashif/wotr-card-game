@@ -12,13 +12,13 @@ def main():
     state = State(
         shadow_scoring_area=ShadowScoringArea([], [], 0),
         free_scoring_area=FreeScoringArea([], []),
-        frodo_player = Player(PlayerCharacter.FRODO, HumanAgent()),
-        witch_king_player = Player(PlayerCharacter.WITCH_KING, HumanAgent()),
-        aragorn_player = Player(PlayerCharacter.ARAGORN, HumanAgent()),
-        saruman_player = Player(PlayerCharacter.SARUMAN, HumanAgent()),
-        shadow_battleground_deck = BattlegroundDeck(Side.SHADOW),
-        free_battleground_deck = BattlegroundDeck(Side.FREE),
-        path_deck = PathDeck(),
+        frodo_player=Player(PlayerCharacter.FRODO, HumanAgent()),
+        witch_king_player=Player(PlayerCharacter.WITCH_KING, HumanAgent()),
+        aragorn_player=Player(PlayerCharacter.ARAGORN, HumanAgent()),
+        saruman_player=Player(PlayerCharacter.SARUMAN, HumanAgent()),
+        shadow_battleground_deck=BattlegroundDeck(Side.SHADOW),
+        free_battleground_deck=BattlegroundDeck(Side.FREE),
+        path_deck=PathDeck(),
         active_battlegrounds=[],
     )
 
@@ -42,7 +42,7 @@ def main():
     for player in state.all_players():
         print("Each player draws 7 cards and cycles two.")
         player.draw_n_to_hand(7)
-        
+
         # Choice here
         player.cycle(2)
 
@@ -87,46 +87,50 @@ def main():
                             continue
 
                         print("choose a place to play it:")
-                        place_to_play = player.agent.pick_with_fallback(list(state.get_playable_locations(player, card)))
+                        place_to_play = player.agent.pick_with_fallback(
+                            list(state.get_playable_locations(player, card))
+                        )
 
                         if place_to_play is None:
                             continue
-                        
+
                         state.play_card(player, card, place_to_play)
-                        
+
                         if player.can_cycle():
                             player.cycle(1)
                         else:
                             player.forsake(state)
-                        
+
                         did_action = True
-                    
+
                     case ActionType.MOVE_FROM_RESERVE:
                         print("choose a card in reserve:")
                         card = player.agent.pick_with_fallback(player.reserve.cards)
-                        
+
                         if card is None:
                             continue
 
                         print("choose a place to move it:")
-                        place_to_move = player.agent.pick_with_fallback(list(state.get_playable_locations(player, card)))
+                        place_to_move = player.agent.pick_with_fallback(
+                            list(state.get_playable_locations(player, card))
+                        )
 
                         if place_to_move is None:
                             continue
 
                         state.move_card_from_reserve(player, card, place_to_move)
                         did_action = True
-                    
+
                     case ActionType.CYCLE:
                         print("choose a card to cycle:")
                         card = player.agent.pick_with_fallback(player.hand)
-                        
+
                         if card is None:
                             continue
 
                         player.cycle_specific(card)
                         did_action = True
-                    
+
                     case ActionType.WINNOW:
                         # p13: If you don't have two cards in hand, you can't winnow.
                         if len(player.hand) < 2:
@@ -135,13 +139,13 @@ def main():
 
                         print("choose the first card to eliminate:")
                         card1 = player.agent.pick_with_fallback(player.hand)
-                        
+
                         if card1 is None:
                             continue
 
                         print("choose the second card to eliminate:")
                         card2 = player.agent.pick_with_fallback(player.hand)
-                        
+
                         if card2 is None:
                             continue
 
@@ -150,24 +154,26 @@ def main():
 
                         player.draw_n_to_hand(1)
                         did_action = True
-                    
+
                     case ActionType.CARD_ACTION:
                         print("choose a card with an action:")
-                        card = player.agent.pick_with_fallback(state.cards_with_doable_actions_for_player(player))
-                        
+                        card = player.agent.pick_with_fallback(
+                            state.cards_with_doable_actions_for_player(player)
+                        )
+
                         if card is None:
                             continue
 
                         state.perform_card_action(card)
                         did_action = True
-                    
+
                     case ActionType.RING_TOKEN:
                         if player.used_ring_token is False:
                             player.use_ring_token()
                             did_action = True
                         else:
                             print("you already used your ring token!")
-                    
+
                     case ActionType.PASS:
                         if player.can_pass():
                             player.pass_turn()
@@ -180,13 +186,12 @@ def main():
                 print("action phase is over")
                 break
 
-
         # Combat Step
         print("resolving combat")
-        
+
         state.resolve_battlegrounds()
         state.resolve_active_path()
-        
+
         # Victory Check
         print("checking for victory")
         if state.is_game_over():
@@ -204,6 +209,7 @@ def main():
         state.game_round += 1
 
         # TODO: Verify invariants - all cards still exist somewhere
+
 
 if __name__ == "__main__":
     main()

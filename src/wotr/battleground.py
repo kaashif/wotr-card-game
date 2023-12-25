@@ -7,6 +7,7 @@ from wotr.deck import Deck
 from wotr.state import State
 from wotr.battlegrounds import all_battlegrounds
 
+
 @dataclass
 class Battleground:
     side: Side
@@ -21,12 +22,22 @@ class Battleground:
     def card_is_playable(self, card: FactionCard) -> bool:
         # Only armies and characters can be played to battlegrounds
         # Given that the card type is right, the battleground faction needs to match
-        return card.card_type in [CardType.ARMY, CardType.CHARACTER] \
-            and card.faction in self.attacking_faction_icons + self.defending_faction_icons
+        return (
+            card.card_type in [CardType.ARMY, CardType.CHARACTER]
+            and card.faction
+            in self.attacking_faction_icons + self.defending_faction_icons
+        )
 
     def activate(self, state: State) -> None:
-        self.activate_callback(self, state) 
+        self.activate_callback(self, state)
+
 
 class BattlegroundDeck(Deck):
     def __init__(self, side: Side):
-        super().__init__([battleground for battleground in all_battlegrounds if battleground.side == side])
+        super().__init__(
+            [
+                battleground
+                for battleground in all_battlegrounds
+                if battleground.side == side
+            ]
+        )

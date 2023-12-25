@@ -4,6 +4,7 @@ from wotr.enums import Faction, CardType, CharacterClass
 from wotr.path import Path
 from wotr.state import PlayLocation, State
 
+
 @dataclass
 class FactionCard:
     faction: Faction
@@ -47,8 +48,10 @@ class FactionCard:
         self.items.append(item)
 
     def is_playable_to_path(self, path: Path) -> bool:
-        return self.card_type == CardType.CHARACTER and \
-            path.path_number in self.allowed_paths
+        return (
+            self.card_type == CardType.CHARACTER
+            and path.path_number in self.allowed_paths
+        )
 
     def can_do_action(self, state: State) -> bool:
         return False
