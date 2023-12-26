@@ -6,7 +6,8 @@ This is a first draft solution. I'm reading through the rule book, implementing
 things as I go, with little/no thought given to design. This is so I can
 understand the problem. I've discovered many complexities and kinds of
 decisions that need to be made that I didn't realise existed before I actually
-sat down and tried to write code, see #11.
+sat down and tried to write code, see
+<https://github.com/kaashif/wotr-card-game/issues/11> for a good example.
 
 Most likely scenario is I shit out some 50% Copilot written code (as I have)
 with no design, hack it into a working state, then never rewrite it. Rewriting
