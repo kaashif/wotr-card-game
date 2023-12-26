@@ -2,10 +2,25 @@
 
 Python implementation of the War of the Ring Card Game.
 
+This is a first draft solution. I'm reading through the rule book, implementing
+things as I go, with little/no thought given to design. This is so I can
+understand the problem. I've discovered many complexities and kinds of
+decisions that need to be made that I didn't realise existed before I actually
+sat down and tried to write code, see #11.
+
+Most likely scenario is I shit out some 50% Copilot written code (as I have)
+with no design, hack it into a working state, then never rewrite it. Rewriting
+it is a pipe dream, but would be nice.
+
+Rewriting in Rust would solve some issues (Python has no macros, no circular
+module dependencies, is slow) but introduce others (Do I really care about
+aliasing? Also, everything is mutable and effectively global, that's probably
+not avoidable).
+
 ## Design notes
 
 Originally, the intention was to make something that could be turned into an
-OpenAI Gym environment, but I don't think that's practical. It's also not
+OpenAI Gym environment, but I don't think that's easy. It's also not
 exactly easy to substitute human opponents in for AIs if you do that.
 
 I think I'll implement the game as if all opponents are humans, making decisions
