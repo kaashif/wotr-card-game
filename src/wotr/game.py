@@ -305,6 +305,9 @@ class Game:
         )
         number_supported = min(len(attacking_characters), len(attacking_armies))
 
+        # TODO: It's actually not this simple. Some cards have conditional bonuses
+        # depending on who they're supporting. e.g. Dead Men of Dunharrow get +2/+2
+        # if supporting Aragorn.
         for i in range(number_supported):
             character = attacking_characters[i]
             total_attack += (
