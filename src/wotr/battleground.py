@@ -16,6 +16,12 @@ class Battleground(Named):
     victory_point_value: int
     cards: list[FactionCard]
     card_text: str
+    attack_tokens: int = 0
+    defense_tokens: int = 0
+
+    # p16: If this battleground gets reactivated from the other side's scoring
+    # area, then defending icons are ignored.
+    cancel_defending_icons: bool = False
 
     def card_is_playable(self, card: FactionCard) -> bool:
         # Only armies and characters can be played to battlegrounds
@@ -28,6 +34,16 @@ class Battleground(Named):
 
     def name(self) -> str:
         return self.title
+
+    def attacking_cards(self) -> list[FactionCard]:
+        return [
+            card for card in self.cards if card.faction in self.attacking_faction_icons
+        ]
+
+    def defending_cards(self) -> list[FactionCard]:
+        return [
+            card for card in self.cards if card.faction in self.defending_faction_icons
+        ]
 
     def __str__(self) -> str:
         card_string = f"{self.title} ({self.side.name})\n"

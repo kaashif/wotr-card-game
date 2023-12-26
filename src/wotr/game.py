@@ -266,9 +266,80 @@ class Game:
 
         raise Exception(f"No battleground with name {name}")
 
-    def resolve_battlegrounds(self) -> None:
-        # TODO
+    def resolve_battleground(self, battleground: Battleground) -> None:
+        # TODO: heavily WIP
+        # p16
+
+        # 1. Count the number of attack icons on attacking cards and tokens
+        total_attack = 0
+
+        attacking_armies = [
+            card
+            for card in battleground.attacking_cards()
+            if card.card_type == CardType.ARMY
+        ]
+        attacking_characters = [
+            card
+            for card in battleground.attacking_cards()
+            if card.card_type == CardType.CHARACTER
+        ]
+
+        for card in attacking_armies:
+            # TODO: Support conditional card bonuses
+            total_attack += card.base_battleground_attack
+
+        # TODO: Not 100% sure this is true - technically it's the players' choice.
+        # Attackers just want the highest attack characters to be supported. They'll all
+        # be eliminated anyway, so choices don't matter.
+
+        # TODO: Support conditional card bonuses.
+
+        # TODO: We should only care about supporting characters with leadership attack/defense,
+        # since characters like Legolas with only base attack/defense don't need to be supported.
+
+        # Sort so larger attack values are supported first.
+        attacking_characters.sort(
+            key=lambda card: card.base_battleground_attack
+            + card.base_leadership_attack,
+            reverse=True,
+        )
+        number_supported = min(len(attacking_characters), len(attacking_armies))
+
+        for i in range(number_supported):
+            character = attacking_characters[i]
+            total_attack += (
+                character.base_battleground_attack + character.base_leadership_attack
+            )
+
+        # 2. Cancel a number of attack icons equal to the number of defense icons
+        # on the battlegrounds itself, including defense tokens.
+        # (Note: attacking cards aren't eliminated yet, they're eliminated at the end!)
+        total_attack -= battleground.defense_icons + battleground.defense_tokens
+
+        # 3. If there are any remaining attack icons, the defending player(s) must
+        # cancel as many of them as possible, eliminating their cards from the
+        # battleground until either the number of defense icons eliminated equals or
+        # exceeds the number of remaining attack icons, or they run out of cards.
+
+        # TODO: Allow player choice of which cards to eliminate.
+        # Right now I'm thinking the player wants to eliminate from lower defense values
+        # to higher values, preferring to eliminate armies over characters.
+        # This is a heuristic and an assumption mostly based on e.g. Gandalf being
+        # really bad to eliminate.
+
+        # 4. Any leftover defending cards on the battleground are cycled.
+
+        # A defending card must be eliminated if it cancelled any attack icons.
+
+        # All attacking cards are eliminated.
+
+        # Leadership attack/defense only counts when the character is supported
+        # by an army. Armies can only support one character.
         pass
+
+    def resolve_battlegrounds(self) -> None:
+        for battleground in self.active_battlegrounds:
+            self.resolve_battleground(battleground)
 
     def resolve_active_path(self) -> None:
         # TODO

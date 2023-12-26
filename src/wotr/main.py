@@ -60,6 +60,7 @@ def main():
         player.cycle(2)
 
     while True:
+        # TODO: Reset all cards' just played flags
         # p8: The Game Round
 
         # Location Step
@@ -69,6 +70,8 @@ def main():
             game.active_battlegrounds.append(game.free_battleground_deck.draw())
         else:
             game.active_battlegrounds.append(game.shadow_battleground_deck.draw())
+
+        passed_player_characters: set[PlayerCharacter] = set()
 
         # May result in a choice
         game.trigger_event(EventType.ACTIVATE, game.active_battlegrounds[0])
@@ -124,6 +127,8 @@ def main():
 
                     case ActionType.MOVE_FROM_RESERVE:
                         print("choose a card in reserve:")
+
+                        # TODO: choose only from cards not just played
                         card = player.agent.pick_with_fallback(
                             DecisionType.WHICH_CARD_TO_MOVE_FROM_RESERVE,
                             player.reserve.cards,
@@ -159,10 +164,10 @@ def main():
                     case ActionType.WINNOW:
                         # p13: If you don't have two cards in hand, you can't winnow.
                         if len(player.hand) < 2:
-                            print("you don't have enough cards in hand to winnow!")
+                            print("You don't have enough cards in hand to winnow!")
                             continue
 
-                        print("choose the first card to eliminate:")
+                        print("Choose the first card to eliminate:")
                         card1 = player.agent.pick_with_fallback(
                             DecisionType.WHICH_CARD_TO_ELIMINATE, player.hand
                         )
@@ -170,12 +175,16 @@ def main():
                         if card1 is None:
                             continue
 
-                        print("choose the second card to eliminate:")
+                        print("Choose the second card to eliminate:")
                         card2 = player.agent.pick_with_fallback(
                             DecisionType.WHICH_CARD_TO_ELIMINATE, player.hand
                         )
 
                         if card2 is None:
+                            continue
+
+                        if card1 is card2:
+                            print("Please choose two different cards!")
                             continue
 
                         player.eliminate_specific(card1)
@@ -185,7 +194,7 @@ def main():
                         did_action = True
 
                     case ActionType.CARD_ACTION:
-                        print("choose a card with an action:")
+                        print("Choose a card with an action:")
                         card = player.agent.pick_with_fallback(
                             DecisionType.WHICH_CARD_ACTION_TO_DO,
                             game.cards_with_doable_actions_for_player(player),
@@ -202,28 +211,32 @@ def main():
                             player.use_ring_token()
                             did_action = True
                         else:
-                            print("you already used your ring token!")
+                            print("You already used your ring token!")
 
                     case ActionType.PASS:
                         if player.can_pass():
+                            passed_player_characters.add(player.character)
                             player.pass_turn()
                             did_action = True
                         else:
-                            print("you can't pass!")
+                            print("You can't pass!")
 
-            if all(player.passed for player in game.all_players()):
+            if all(
+                player.character in passed_player_characters
+                for player in game.all_players()
+            ):
                 # If all players have passed consecutively, the Action step ends
-                print("action phase is over")
+                print("Action phase is over")
                 break
 
         # Combat Step
-        print("resolving combat")
+        print("Resolving combat")
 
         game.resolve_battlegrounds()
         game.resolve_active_path()
 
         # Victory Check
-        print("checking for victory")
+        print("Checking for victory")
         if game.is_game_over():
             game.end_game()
             break
